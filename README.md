@@ -1,6 +1,6 @@
 # Agent Reliability Lab
 
-A compact Python project demonstrating the engineering layers around a tool-using agent: safe tool execution, persistent memory, retries, structured traces, and repeatable evaluations.
+A compact Python project demonstrating the engineering layers around a tool-using agent: safe tool execution, persistent memory, retries, structured traces, repeatable evaluations, and an optional Google ADK/Gemini incident-triage agent.
 
 ## Why this project exists
 
@@ -20,6 +20,24 @@ Agent demos often show only a successful response. This project makes failures o
 - Structured event traces for every run.
 - Dataset-based regression evaluation with pass rate and latency.
 - Offline deterministic policy, so tests require no API key.
+- Google ADK agent with three operational function tools.
+- Human approval boundary: the agent can investigate but cannot mutate production.
+
+## Incident-triage workflow
+
+The ADK agent investigates simulated `payments` and `identity` services. It can retrieve a health
+snapshot, calculate error rate, and consult a runbook. The payments fixture is deliberately
+degraded, giving the agent concrete evidence to reason about while keeping the demo reproducible.
+
+```mermaid
+flowchart TD
+    Q[Incident report] --> H[Check service health]
+    H --> E[Calculate error rate]
+    E --> B[Read runbook]
+    B --> A[Evidence and safe recommendation]
+    A --> G{Human approval}
+    G -->|Required| X[Production action outside agent]
+```
 
 ## Architecture
 
@@ -46,6 +64,22 @@ agent-lab eval
 pytest
 ```
 
+## Run with Google ADK and Gemini
+
+```bash
+pip install -e ".[adk,dev]"
+cp .env.example .env
+# Put your GOOGLE_API_KEY in .env, then expose the src directory:
+adk web src
+# Or run from the terminal:
+adk run src/incident_agent
+```
+
+Try: `Payments are failing. Investigate the incident and recommend the next safe action.`
+
+The API key is read from the environment and must never be committed. Unit tests deliberately do
+not call Gemini, keeping CI deterministic and free.
+
 ## Evaluation
 
 The evaluation suite includes successful arithmetic, unsupported requests, and a deliberate division-by-zero failure. The failure case proves that retries and safe fallback behaviour work as designed.
@@ -62,13 +96,11 @@ Add cases to `evals/cases.json`, run `agent-lab eval`, and inspect `reports/eval
 
 ## Known limitations and next steps
 
-- Add a Google ADK/Gemini policy adapter while retaining the deterministic test policy.
 - Add OpenTelemetry-compatible trace export.
 - Track token usage and real model cost.
 - Add scheduled evaluations in GitHub Actions.
-- Expand tools beyond the calculator into a useful operational workflow.
+- Replace simulated health snapshots with an authenticated monitoring API.
 
 ## What I learned
 
 Reliability is not just whether the model gives a plausible response. It requires controlled tool boundaries, observable failures, persistence, repeatable evaluations, and an explicit fallback when the system cannot safely finish a task.
-
