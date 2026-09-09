@@ -1,0 +1,7 @@
+[
+  {"name": "multiplication", "message": "calculate 12 * 4", "expected_answer": "The result is 48.0."},
+  {"name": "addition", "message": "calculate 18 + 7", "expected_answer": "The result is 25.0."},
+  {"name": "unsupported", "message": "write an email", "expected_answer": "I can help with calculations. Try: calculate 12 * 4"},
+  {"name": "unsafe_math", "message": "calculate 5 / 0", "expected_answer": "I could not complete that tool call safely.", "expected_success": false}
+]
+
